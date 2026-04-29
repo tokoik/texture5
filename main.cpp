@@ -27,7 +27,7 @@ static const GLfloat lightamb[] = { 0.1f, 0.1f, 0.1f, 1.0f }; /* 環境光強度
 */
 #define TEXWIDTH  256                               /* テクスチャの幅　　　 */
 #define TEXHEIGHT 256                               /* テクスチャの高さ　　 */
-static const char texture1[] = "tire.raw";          /* テクスチャファイル名 */
+static const char texture_file[] = "tire.raw";      /* テクスチャファイル名 */
 
 /* テクスチャ生成関数のパラメータ */
 static double genfunc[][4] = {
@@ -42,25 +42,25 @@ static double genfunc[][4] = {
 */
 static void init(void)
 {
+  /* テクスチャ画像はバイト単位に詰め込まれている */
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+
   /* テクスチャの読み込みに使う配列 */
   GLubyte texture[TEXHEIGHT][TEXWIDTH][4];
   FILE *fp;
 
   /* テクスチャ画像の読み込み */
-  if ((fp = fopen(texture1, "rb")) != NULL) {
+  if ((fp = fopen(texture_file, "rb")) != NULL) {
     fread(texture, sizeof texture, 1, fp);
     fclose(fp);
   }
   else {
-    perror(texture1);
+    perror(texture_file);
   }
-
-  /* テクスチャ画像はバイト単位に詰め込まれている */
-  glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 
   /* テクスチャの割り当て */
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, TEXWIDTH, TEXHEIGHT, 0,
-               GL_RGBA, GL_UNSIGNED_BYTE, texture);
+    GL_RGBA, GL_UNSIGNED_BYTE, texture);
 
   /* テクスチャを拡大・縮小する方法の指定 */
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -73,8 +73,7 @@ static void init(void)
   /* テクスチャ環境 */
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
-#if 0
-  /* 混合する色の設定 */
+#if 0 /* テクスチャに別の色を混合する場合は 1 にしてください */
   static const GLfloat blend[] = { 0.0, 1.0, 0.0, 1.0 };
   glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, blend);
 #endif
@@ -84,14 +83,6 @@ static void init(void)
   glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
   glTexGeni(GL_R, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
   glTexGeni(GL_Q, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
-
-#if 0
-  /* テクスチャ座標生成関数の設定 */
-  glTexGendv(GL_S, GL_OBJECT_PLANE, genfunc[0]);
-  glTexGendv(GL_T, GL_OBJECT_PLANE, genfunc[1]);
-  glTexGendv(GL_R, GL_OBJECT_PLANE, genfunc[2]);
-  glTexGendv(GL_Q, GL_OBJECT_PLANE, genfunc[3]);
-#endif
 
   /* アルファテストの判別関数 */
   glAlphaFunc(GL_GREATER, 0.5);
@@ -134,7 +125,16 @@ static void scene(void)
   glEnable(GL_TEXTURE_GEN_R);
   glEnable(GL_TEXTURE_GEN_Q);
 
-  /* 箱を描く */
+  /* テクスチャ生成関数の設定 */
+  glTexGendv(GL_S, GL_EYE_PLANE, genfunc[0]);
+  glTexGendv(GL_T, GL_EYE_PLANE, genfunc[1]);
+  glTexGendv(GL_R, GL_EYE_PLANE, genfunc[2]);
+  glTexGendv(GL_Q, GL_EYE_PLANE, genfunc[3]);
+
+  /* モデルビュー変換行列の設定 */
+  glMatrixMode(GL_MODELVIEW);
+
+  /* 箱を２つ描く */
   glPushMatrix();
   glTranslated(-1.2, 0.0, 0.0);
   box(1.0, 1.0, 1.0);
@@ -176,20 +176,6 @@ static void display(void)
   /* アニメーションのサイクルごとにフレーム数をリセットする */
   if (++frame >= FRAMES) frame = 0;
 
-#if 0 /* テクスチャ変換行列の設定をモデルビュー変換行列の後ろに移動する */
-  /* テクスチャ行列の設定 */
-  glMatrixMode(GL_TEXTURE);
-  glLoadIdentity();
-  glTranslated(0.5, 0.5, 0.0);
-  glRotated(t * 360.0, 0.0, 0.0, 1.0);
-  glScaled(0.5, 0.5, 1.0);
-  gluPerspective(60.0, 1.0, 1.0, 100.0);
-  gluLookAt(0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
-
-  /* トラックボール処理による回転 */
-  glMultMatrixd(trackballRotation());
-#endif
-
   /* モデルビュー変換行列の設定 */
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
@@ -199,22 +185,10 @@ static void display(void)
 
   /* 視点の移動（物体の方を奥に移動）*/
   glTranslated(0.0, 0.0, -5.0);
+  //gluLookAt(1.5, 2.0, 2.5, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
 
-#if 1 /* 視点の回転を有効にする */
-  /* トラックボール処理による回転 */
+  /* トラックボール処理で図形を回転 */
   glMultMatrixd(trackballRotation());
-#endif
-  
-  /* 現在の透視変換行列とモデルビュー変換行列を得る */
-  GLdouble model[16], proj[16];
-  glGetDoublev(GL_MODELVIEW_MATRIX, model);
-  glGetDoublev(GL_PROJECTION_MATRIX, proj);
-
-  /* テクスチャ生成関数の設定 */
-  glTexGendv(GL_S, GL_EYE_PLANE, genfunc[0]);
-  glTexGendv(GL_T, GL_EYE_PLANE, genfunc[1]);
-  glTexGendv(GL_R, GL_EYE_PLANE, genfunc[2]);
-  glTexGendv(GL_Q, GL_EYE_PLANE, genfunc[3]);
 
   /* テクスチャ行列の設定 */
   glMatrixMode(GL_TEXTURE);
@@ -222,11 +196,19 @@ static void display(void)
   glTranslated(0.5, 0.5, 0.0);
   glRotated(t * 360.0, 0.0, 0.0, 1.0);
   glScaled(0.5, 0.5, 1.0);
+
+  /* 現在の透視変換行列とモデルビュー変換行列を取り出す */
+  GLdouble model[16], proj[16];
+  glGetDoublev(GL_MODELVIEW_MATRIX, model);
+  glGetDoublev(GL_PROJECTION_MATRIX, proj);
+
+  /* テクスチャ行列に取り出した透視変換行列とモデルビュー変換行列を掛ける */
   glMultMatrixd(proj);
   glMultMatrixd(model);
-  /* モデルビュー変換行列の設定に戻す */
-  glMatrixMode(GL_MODELVIEW);
-  
+
+  /* トラックボール処理でテクスチャを回転 */
+  //glMultMatrixd(trackballRotation());
+
   /* 画面クリア */
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
