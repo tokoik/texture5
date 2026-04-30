@@ -3,13 +3,13 @@
 #  include <GLUT/glut.h>
 #else
 #  if defined(_WIN32)
+#  include <GL/glut.h>
 #    define _CRT_SECURE_NO_WARNINGS
 #    if !defined(GL_CLAMP_TO_EDGE)
 #      define GL_CLAMP_TO_EDGE 0x812F
 #    endif
 //#    pragma comment(linker, "/subsystem:\"windows\" /entry:\"mainCRTStartup\"")
 #  endif
-#  include <GL/glut.h>
 #endif
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,7 +42,7 @@ static double genfunc[][4] = {
 */
 static void init(void)
 {
-  /* テクスチャ画像はバイト単位に詰め込まれている */
+  /* テクスチャ画像はワード単位に詰め込まれている */
   glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 
   /* テクスチャの読み込みに使う配列 */
