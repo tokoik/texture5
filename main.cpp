@@ -3,8 +3,11 @@
 #  include <GLUT/glut.h>
 #else
 #  if defined(_WIN32)
-#  include <GL/glut.h>
+#    define _USE_MATH_DEFINES
 #    define _CRT_SECURE_NO_WARNINGS
+#  endif
+#  include <GL/glut.h>
+#  if defined(_WIN32)
 #    if !defined(GL_CLAMP_TO_EDGE)
 #      define GL_CLAMP_TO_EDGE 0x812F
 #    endif
