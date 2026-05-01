@@ -129,12 +129,6 @@ static void scene(void)
   glEnable(GL_TEXTURE_GEN_R);
   glEnable(GL_TEXTURE_GEN_Q);
 
-  /* テクスチャ生成関数の設定 */
-  glTexGendv(GL_S, GL_EYE_PLANE, genfunc[0]);
-  glTexGendv(GL_T, GL_EYE_PLANE, genfunc[1]);
-  glTexGendv(GL_R, GL_EYE_PLANE, genfunc[2]);
-  glTexGendv(GL_Q, GL_EYE_PLANE, genfunc[3]);
-
   /* モデルビュー変換行列の設定 */
   glMatrixMode(GL_MODELVIEW);
 
@@ -194,6 +188,12 @@ static void display(void)
   /* トラックボール処理で図形を回転 */
   glMultMatrixd(trackballRotation());
 
+  /* テクスチャ生成関数の設定 */
+  glTexGendv(GL_S, GL_EYE_PLANE, genfunc[0]);
+  glTexGendv(GL_T, GL_EYE_PLANE, genfunc[1]);
+  glTexGendv(GL_R, GL_EYE_PLANE, genfunc[2]);
+  glTexGendv(GL_Q, GL_EYE_PLANE, genfunc[3]);
+
   /* テクスチャ行列の設定 */
   glMatrixMode(GL_TEXTURE);
   glLoadIdentity();
@@ -201,14 +201,14 @@ static void display(void)
   glRotated(t * 360.0, 0.0, 0.0, 1.0);
   glScaled(0.5, 0.5, 1.0);
 
-  /* 現在の透視変換行列とモデルビュー変換行列を取り出す */
-  GLdouble model[16], proj[16];
-  glGetDoublev(GL_MODELVIEW_MATRIX, model);
-  glGetDoublev(GL_PROJECTION_MATRIX, proj);
+  /* 現在の投影変換行列とモデルビュー変換行列を取り出す */
+  GLdouble projection[16]m, ;odelview[16]
+  glGetDoublev(GL_PROJECTION_MATRIX, projection);
+  glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
 
-  /* テクスチャ行列に取り出した透視変換行列とモデルビュー変換行列を掛ける */
-  glMultMatrixd(proj);
-  glMultMatrixd(model);
+  /* 取り出した投影変換行列と投影変換行列をテクスチャ行列に掛ける */
+  glMultMatrixd(projection);
+  glMultMatrixd(modelview);
 
   /* トラックボール処理でテクスチャを回転 */
   //glMultMatrixd(trackballRotation());
