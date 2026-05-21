@@ -10,7 +10,7 @@
 
 プログラムを実行すると、表面にタイヤのパターン画像（tire.raw）が貼り付けられた２つの箱が表示され、そのテクスチャが自動で回転します。マウスのドラッグで図形を回転しても、貼り付けられているテクスチャの投影方向は変化しません。
 
-![視点マッピング](https://tokoik.github.io/blog/assets/images/texture5.webp)
+![視点マッピング](https://tokoik.github.io/blog/assets/images/texture/texture5.webp)
 
 ## 2. ビルド方法
 
